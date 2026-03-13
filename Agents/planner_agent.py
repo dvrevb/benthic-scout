@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from agents import Agent
 
-HOW_MANY_SEARCHES = 5
+HOW_MANY_SEARCHES = 1
 
 INSTRUCTIONS = f"""You are a helpful research assistant. 
 Given a user query, generate a set of web search terms that would best help answer it. 

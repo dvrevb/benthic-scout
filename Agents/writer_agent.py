@@ -1,21 +1,24 @@
 from pydantic import BaseModel, Field
-from agents import Agent
+from agents import Agent, ModelSettings
+
+from Agents.evaluator_agent import evaluator_agent
 
 INSTRUCTIONS = (
     "You are a senior researcher tasked with producing a cohesive report for a research query. "
-    "You will be provided with the original query and preliminary research conducted by a research assistant.\n"
-    "First, create a detailed outline that clearly describes the structure and flow of the report. "
-    "Next, write the full report based on this outline and the provided research.\n"
+    "You will be provided with the original query and preliminary research conducted by a research assistant.\n\n"
+    "STEP 1: Create a detailed outline that clearly describes the structure and flow of the report.\n"
+    "STEP 2: Write the full report based on this outline and the provided research.\n"
+    "STEP 3: Hand off to EvaluatorAgent for review.\n\n"
     "The final output should be in markdown format, comprehensive and detailed. "
-    "Aim for 5–10 pages of content, with at least 1000 words, ensuring depth and clarity throughout."
+    "Aim for 5–10 pages of content, with at least 1000 words, ensuring depth and clarity throughout.\n\n"
+    "If you receive feedback from EvaluatorAgent indicating the report is invalid, "
+    "carefully read the reason provided and rewrite the report addressing the specific issues mentioned. "
+    "Then hand off to EvaluatorAgent again."
 )
-
 
 class ReportData(BaseModel):
     short_summary: str = Field(description="A short 2-3 sentence summary of the findings.")
-
     markdown_report: str = Field(description="The final report")
-
     follow_up_questions: list[str] = Field(description="Suggested topics to research further")
 
 
@@ -24,4 +27,10 @@ writer_agent = Agent(
     instructions=INSTRUCTIONS,
     model="gpt-4o-mini",
     output_type=ReportData,
+    handoffs=[evaluator_agent],
+    handoff_description=("Writes or rewrites a detailed research report in markdown format ""based on the original query and provided research."),
+    model_settings=ModelSettings(parallel_tool_calls=False)
 )
+
+# defined here because it causes circular dependency
+evaluator_agent.handoffs = [writer_agent]

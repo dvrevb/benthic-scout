@@ -4,6 +4,9 @@ from Agents.planner_agent import planner_agent, WebSearchItem, WebSearchPlan
 from Agents.writer_agent import writer_agent, ReportData
 from Agents.email_agent import email_agent
 import asyncio
+import json
+from agents.items import MessageOutputItem
+from agents import ItemHelpers
 
 class ResearchManager:
 
@@ -67,10 +70,15 @@ class ResearchManager:
         result = await Runner.run(
             writer_agent,
             input,
+            max_turns=5
         )
 
         print("Finished writing report")
-        return result.final_output_as(ReportData)
+
+        if isinstance(result.final_output, ReportData):
+            return result.final_output
+
+        raise ValueError(f"No ReportData found. Got: {type(result.final_output)}")
     
     async def send_email(self, report: ReportData) -> None:
         print("Writing email...")
